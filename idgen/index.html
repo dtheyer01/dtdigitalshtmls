@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Item ID Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        input, button {
+            margin: 5px;
+            padding: 8px;
+        }
+        #output-ids, #output-descriptions {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            min-height: 50px;
+            white-space: pre-line;
+        }
+    </style>
+</head>
+<body>
+    <h2>Item ID Generator</h2>
+    <p>Current ID Format is: First Letter of Category, First Three of Fabric, Size, then First Three letters of Color, or if Color is Two Words, First Letter of First Word, then First two of second word.</p>
+    <label>Product Category:</label>
+    <input type="text" id="category" placeholder="e.g., Linen">
+    <br>
+    <label>Fabric Type:</label>
+    <input type="text" id="fabric" placeholder="e.g., Cotton">
+    <br>
+    <label>Sizes (comma-separated):</label>
+    <input type="text" id="size" placeholder="e.g., 90x132,108 Round, Napkin">
+    <br>
+    <label>Colors (comma-separated):</label>
+    <input type="text" id="color" placeholder="e.g., White,Black, Navy Blue">
+    <br>
+    <button onclick="generateIDs()">Generate IDs and Descriptions</button>
+    <button onclick="copyToClipboard('output-ids')">Copy IDs</button>
+    <button onclick="copyToClipboard('output-descriptions')">Copy Descriptions</button>
+    
+    <h3>Generated IDs</h3>
+    <div id="output-ids"></div>
+    
+    <h3>Generated Descriptions</h3>
+    <div id="output-descriptions"></div>
+
+    <script>
+        function generateIDs() {
+            let category = document.getElementById('category').value.trim().toLowerCase();
+            let fabric = document.getElementById('fabric').value.trim();
+            let fabricFormatted = fabric.charAt(0).toUpperCase() + fabric.slice(1).toLowerCase();
+            let sizes = document.getElementById('size').value.trim().toLowerCase().split(',');
+            let colors = document.getElementById('color').value.trim().toLowerCase().split(',');
+            
+            if (!category || !fabric || sizes.length === 0 || colors.length === 0) {
+                document.getElementById('output-ids').innerText = "Please fill all fields.";
+                document.getElementById('output-descriptions').innerText = "";
+                return;
+            }
+            
+            let categoryCode = category.charAt(0).toUpperCase();
+            let fabricCode = fabric.substring(0, 3).toUpperCase();
+            let outputIDs = "";
+            let outputDescriptions = "";
+            
+            sizes.forEach(size => {
+                size = size.trim();
+                let formattedSize = "";
+                if (size.includes("round")) {
+                    formattedSize = size.replace(/[^0-9]/g, '') + '" Round';
+                    size = size.replace(/[^0-9]/g, '') + 'R';
+                } else if (size === "napkin") {
+                    formattedSize = "Dinner Napkin";
+                    size = "NAP";
+                } else {
+                    formattedSize = size.replace(/(\d+)/g, '$1"').replace("x", " x ");
+                    size = size.toUpperCase();
+                }
+                
+                colors.forEach(color => {
+                    color = color.trim();
+                    let colorParts = color.split(" ");
+                    let colorCode = "";
+                    let formattedColor = colorParts.map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+                    
+                    if (colorParts.length === 1) {
+                        colorCode = color.substring(0, 3).toUpperCase();
+                    } else if (colorParts.length === 2) {
+                        colorCode = (colorParts[0].charAt(0) + colorParts[1].substring(0, 2)).toUpperCase();
+                    }
+                    
+                    let itemID = `${categoryCode}${fabricCode}${size}${colorCode}`;
+                    let description = `${fabricFormatted} ${formattedSize} ${formattedColor}`;
+                    outputIDs += `${itemID}\n`;
+                    outputDescriptions += `${description}\n`;
+                });
+            });
+            
+            document.getElementById('output-ids').innerText = outputIDs;
+            document.getElementById('output-descriptions').innerText = outputDescriptions;
+        }
+
+        function copyToClipboard(elementId) {
+            let output = document.getElementById(elementId);
+            let range = document.createRange();
+            range.selectNode(output);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+            document.execCommand("copy");
+            window.getSelection().removeAllRanges();
+            alert("Copied to clipboard!");
+        }
+    </script>
+</body>
+</html>
